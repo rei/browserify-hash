@@ -7,21 +7,22 @@ var chai    = require( 'chai' );
 var schai   = require( 'sinon-chai' );
 
 // Configure Chai
-var expect  = chai.expect;
+var expect = chai.expect;
 chai.use( schai );
 
 var getDepTree = function ( overrides ) {
-    return pequire( '../lib/dep-tree', {
+    return pequire( '../lib/hash', {
 
     } );
 };
 
-describe( 'dep-tree', function () {
+describe( 'hash', function () {
 
     it( 'asserts the root file path exists and is a regular file', function () {
-        expect( getDepTree().bind( null, 'fake-file' ) )
-            .to.throw( 'fake-file is not a regular file, or does not exist.' );
+        getDepTree().bind( null, 'fake-file', {}, function ( err ) {
+            expect( err ).to.equal(
+                'fake-file is not a regular file, or does not exist.'
+            )
+        } );
     } );
-
-    
 } );

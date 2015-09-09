@@ -1,9 +1,9 @@
 # browserify-hash
 
-> Hash a Browserify module's dependency tree
+> Detect changes to a Browserify bundle's source files given the entry module.
 
-Browserify-hash tells you if a Browserify module needs to be built by hashing
-the module's dependency tree.
+Browserify-hash detects changes in a Browserify bundle's source files by
+generating and comparing a hash for the entry module and its dependency tree.
 
 ## Status
 
@@ -17,15 +17,15 @@ Begin by requiring browserify-hash:
 var bsfyHash = require( 'browserify-hash' );
 ```
 
-### `bsfyHash.needsRebuild(rootModule, opts)`
+### `bsfyHash.changed(entryModule, opts)`
 
-Returns if a module needs to be rebuilt by hashing its dependency tree and
-comparing it to its entry in the hash table. Hits return false, misses return
-true.
+Returns if a bundle's source files have changed given its entry module. It does
+this by generating and comparing a hash representing the entry module and its
+dependency tree. Hits return false, misses return true.
 
-### `bsfyHash.hash(rootModule)`
+### `bsfyHash.hash(entryModule)`
 
-Return an MD5 hash of a module's dependency tree.
+Return a hash representing the entry module and its dependency tree.
 
 ## License
 

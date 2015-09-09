@@ -25,5 +25,6 @@
     "proxyquire": "^1.7.1",
     "sinon": "^1.16.1",
     "sinon-chai": "^2.8.0"
-  }
+  },
+  "repository": "git@github.com:rei/browserify-hash.git"
 }

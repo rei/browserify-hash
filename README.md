@@ -27,6 +27,10 @@ dependency tree. Hits return false, misses return true.
 
 Return a hash representing the entry module and its dependency tree.
 
+## Resources
+
+- [The Browserify Handbook](https://github.com/substack/browserify-handbook)
+
 ## License
 
 MIT

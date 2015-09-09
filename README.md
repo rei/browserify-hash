@@ -17,15 +17,15 @@ Begin by requiring browserify-hash:
 var bsfyHash = require( 'browserify-hash' );
 ```
 
-### `bsfyHash.changed(entryModule, opts)`
+### `bsfyHash.changed( entryModule, opts, cb )`
 
 Returns if a bundle's source files have changed given its entry module. It does
 this by generating and comparing a hash representing the entry module and its
-dependency tree. Hits return false, misses return true.
+dependency tree. Hits return false, misses return true. First-runs are misses.
 
-### `bsfyHash.hash(entryModule)`
+### `bsfyHash.hash( entryModule, opts, cb )`
 
-Return a hash representing the entry module and its dependency tree.
+Return a hash representing a Browserify bundle's source files.
 
 ## Resources
 

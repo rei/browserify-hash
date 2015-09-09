@@ -1,7 +1,7 @@
 {
   "name": "browserify-hash",
   "version": "0.0.0",
-  "description": "Detect changes to a Browserify bundle's source files given the entry module.",
+  "description": "Detect changes to a Browserify bundle's source files",
   "directories": {
     "test": "test",
     "lint": "eslint"

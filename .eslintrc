@@ -5,8 +5,9 @@ env:
     node: true
 
 globals:
-    describe: true
-    it:       true
+    describe:   true
+    it:         true
+    beforeEach: true
 
 rules:
 

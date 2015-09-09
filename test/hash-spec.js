@@ -12,26 +12,87 @@ chai.use( schai );
 
 // Configure spies
 var spies = {
+    lodash_defaults: sinon.stub().returns( {
+        external: [],
+        include:  []
+    } ),
     md5: sinon.stub().returns( 'md5-return' )
+};
+
+// Configure happy-path dependencies
+var HAPPY_DEPS = {
+    fs: {
+        existsSync: function () {
+            return true;
+        },
+        lstatSync: function () {
+            return {
+                isFile: function () {
+                    return true;
+                }
+            };
+        }
+    },
+    lodash: _.assign( {}, _, {
+        defaults: spies.lodash_defaults
+    } ),
+    md5: spies.md5
 };
 
 // Configure module getter
 var getHash = function ( overrides ) {
     _.forEach( spies, function ( spy ) { spy.reset() } );
-    return pequire( '../lib/hash', _.assign( {}, {
-        md5: spies.md5
-    } ) );
+    return pequire( '../lib/hash', _.assign( {}, HAPPY_DEPS, overrides ) );
 };
 
 describe( 'hash', function () {
 
+    beforeEach( function () {
+        //this.hash = getHash();
+    } );
+
     it( 'asserts the root file path exists and is a regular file', function () {
-        getHash().bind( null, 'fake-file', {}, function ( err ) {
-            err.should.equal(
-                'fake-file is not a regular file, or does not exist.'
-            )
+        var ERR_MSG = 'fake-file is not a regular file, or does not exist.';
+        getHash( {
+            fs: _.assign( {}, HAPPY_DEPS.fs, {
+                existsSync: function () {
+                    return false;
+                }
+            } )
+        } )( 'fake-file', {}, function ( err ) {
+            err.should.equal( ERR_MSG );
+        } );
+
+        getHash( {
+            fs: _.assign( {}, HAPPY_DEPS.fs, {
+                lstatSync: function () {
+                    return {
+                        isFile: function () {
+                            return false;
+                        }
+                    };
+                }
+            } )
+        } )( 'fake-file', {}, function ( err ) {
+            err.should.equal( ERR_MSG );
         } );
     } );
+
+    it( 'defaults undefined options', function () {
+        getHash()( 'fake-file', { fake: 'option' }, _.noop );
+        spies.lodash_defaults.should.be.calledOnce;
+        spies.lodash_defaults.args[ 0 ][ 0 ].should.deep.equal( {
+            fake: 'option'
+        } );
+        spies.lodash_defaults.args[ 0 ][ 1 ].should.deep.equal( {
+            external: [],
+            include:  []
+        } );
+    } );
+
+    it( 'creates a new bsfy instance with the entry file' );
+
+    it( 'pushes the dep collector onto the `deps` pipeline phase' );
 
     it( 'returns a hash of the entry file and its dependency tree' );
 } );

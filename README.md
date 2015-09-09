@@ -1,6 +1,6 @@
 # browserify-hash
 
-> Detect changes to a Browserify bundle's source files given the entry module.
+> Detect changes to a Browserify bundle's source files
 
 Browserify-hash detects changes in a Browserify bundle's source files by
 generating and comparing a hash for the entry module and its dependency tree.

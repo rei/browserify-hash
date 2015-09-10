@@ -65,6 +65,42 @@ var getHash = function ( overrides ) {
 
 describe( 'hash', function () {
 
+    // Integration tests to test high-level functionality
+    describe( 'integration', function () {
+
+        beforeEach( function () {
+            // Get a clean, real-world module
+            this.hash = require( MOD_PATH );
+        } );
+
+        it( 'generates a hash of a browserify module\'s source files', function ( done ) {
+            this.timeout( 5000 );
+
+            var TEST_FILE = path.join( __dirname, 'fixture/main-a.js' );
+            this.hash( TEST_FILE, function ( err, result, reg ) {
+                result.should.equal( 'fbaf48ec981a5eecdb57b929fdd426e8' );
+                done();
+            } );
+        } );
+
+        xit( 'allows you to exclude dependencies', function ( done ) {
+            this.timeout( 4000 );
+            var TEST_FILE = path.join( __dirname, 'fixture/main-a.js' );
+            var EXCLUDES  = _.keys(
+                require(
+                    path.join( __dirname, '../package.json' )
+                ).dependencies
+            );
+            this.hash.hash( TEST_FILE, function ( err, result, reg ) {
+                //console.log( err, result, reg )
+                result.should.equal( 'fbaf48ec981a5eecdb57b929fdd426e8' );
+                done();
+            }, {
+                exclude: EXCLUDES
+            } );
+        } );
+    } );
+
     it( 'asserts the root file path exists and is a regular file', function () {
         var ERR_MSG = 'fake-file is not a regular file, or does not exist.';
         getHash( {

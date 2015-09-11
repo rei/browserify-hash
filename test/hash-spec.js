@@ -7,6 +7,8 @@ var sinon   = require( 'sinon' );
 var chai    = require( 'chai' );
 var schai   = require( 'sinon-chai' );
 
+var md5     = require( 'md5' );
+
 var MOD_PATH = '../lib/hash.js';
 
 // Configure Chai
@@ -60,40 +62,100 @@ var HAPPY_DEPS = {
 // Configure module getter
 var getHash = function ( overrides ) {
     _.forEach( spies, function ( spy ) { spy.reset() } );
-    return pequire( MOD_PATH, _.assign( {}, HAPPY_DEPS, overrides ) );
+    return overrides === 'clean' ?
+        require( MOD_PATH ) :
+        pequire( MOD_PATH, _.assign( {}, HAPPY_DEPS, overrides ) );
 };
 
 describe( 'hash', function () {
 
     // Integration tests to test high-level functionality
-    describe( 'integration', function () {
+    describe.only( 'integration', function () {
+
+        // Return a normalized registry structure to ease registry assertions
+        var normalizeRegistry = function ( reg ) {
+            return {
+                paths:
+                    _.reduce(
+                        _.keys( reg ),
+                        function ( relPaths, absPath ) {
+                            relPaths.push( path.relative( __dirname, absPath ) );
+                            return relPaths;
+                        },
+                        []
+                    ).sort(),
+                hashes: _.values( reg ).sort()
+            };
+        };
 
         beforeEach( function () {
             // Get a clean, real-world module
-            this.hash = require( MOD_PATH );
+            this.hash = getHash( 'clean' );
         } );
 
         it( 'generates a hash of a browserify module\'s source files', function ( done ) {
-            this.timeout( 5000 );
 
             var TEST_FILE = path.join( __dirname, 'fixture/main-a.js' );
+
             this.hash( TEST_FILE, function ( err, result, reg ) {
-                result.should.equal( 'fbaf48ec981a5eecdb57b929fdd426e8' );
+
+                var nreg = normalizeRegistry( reg );
+
+                nreg.paths.should.deep.equal( [
+                    'fixture/lib/circle.js',
+                    'fixture/lib/oval.js',
+                    'fixture/lib/rect.js',
+                    'fixture/lib/shape.js',
+                    'fixture/lib/square-a.js',
+                    'fixture/main-a.js',
+                    'fixture/node_modules/foo/index.js'
+                ] );
+                nreg.hashes.should.deep.equal( [
+                    '0f3f1445aeb4e2c712bbae776d4bb875',
+                    '298f124c79ceff9ca0c4ffba7f14c80f',
+                    '4ed47e3c525512b28c12250a4b7dfc51',
+                    '5a1f16df82c5491485c255004d550127',
+                    'e72034e8b4859e23df35c1e680377cec',
+                    'f904b79cdca12e6f36d5ce6e67c4fe71',
+                    'fdc6f4810e3bf14253a020bec3ba9c70'
+                ] );
+                result.should.equal(
+                    '011a059a39784c7f9f7bc6b918a7fd61'
+                );
+
                 done();
             } );
         } );
 
-        xit( 'allows you to exclude dependencies', function ( done ) {
-            this.timeout( 4000 );
+        it( 'allows you to exclude dependencies', function ( done ) {
+
             var TEST_FILE = path.join( __dirname, 'fixture/main-a.js' );
-            var EXCLUDES  = _.keys(
-                require(
-                    path.join( __dirname, '../package.json' )
-                ).dependencies
-            );
-            this.hash.hash( TEST_FILE, function ( err, result, reg ) {
-                //console.log( err, result, reg )
-                result.should.equal( 'fbaf48ec981a5eecdb57b929fdd426e8' );
+            var EXCLUDES  = [ 'foo' ];
+
+            this.hash( TEST_FILE, function ( err, result, reg ) {
+
+                var nreg = normalizeRegistry( reg );
+
+                nreg.paths.should.deep.equal( [
+                    'fixture/lib/circle.js',
+                    'fixture/lib/oval.js',
+                    'fixture/lib/rect.js',
+                    'fixture/lib/shape.js',
+                    'fixture/lib/square-a.js',
+                    'fixture/main-a.js'
+                ] );
+                nreg.hashes.should.deep.equal( [
+                    '298f124c79ceff9ca0c4ffba7f14c80f',
+                    '4ed47e3c525512b28c12250a4b7dfc51',
+                    '5a1f16df82c5491485c255004d550127',
+                    'e72034e8b4859e23df35c1e680377cec',
+                    'f904b79cdca12e6f36d5ce6e67c4fe71',
+                    'fdc6f4810e3bf14253a020bec3ba9c70'
+                ] );
+                result.should.equal(
+                    '9557f6935ac6cb47a60cc3a89bbbc336'
+                );
+
                 done();
             }, {
                 exclude: EXCLUDES

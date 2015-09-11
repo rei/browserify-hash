@@ -94,13 +94,25 @@ describe( 'hash', function () {
         } );
 
         it( 'generates a hash of a browserify module\'s source files', function ( done ) {
-
             var TEST_FILE = path.join( __dirname, 'fixture/main-a.js' );
-
             this.hash( TEST_FILE, function ( err, result, reg ) {
+                result.should.equal( '011a059a39784c7f9f7bc6b918a7fd61' );
+                done();
+            } );
+        } );
 
+        it( 'generates a unique hash when any file is changed', function ( done ) {
+            var TEST_FILE = path.join( __dirname, 'fixture/main-b.js' );
+            this.hash( TEST_FILE, function ( err, result, reg ) {
+                result.should.equal( 'c4b78742d716762b30780e9428b85631' );
+                done();
+            } );
+        } );
+
+        it( 'includes a registry of dependencies and their hashes', function ( done ) {
+            var TEST_FILE = path.join( __dirname, 'fixture/main-a.js' );
+            this.hash( TEST_FILE, function ( err, result, reg ) {
                 var nreg = normalizeRegistry( reg );
-
                 nreg.paths.should.deep.equal( [
                     'fixture/lib/circle.js',
                     'fixture/lib/oval.js',
@@ -119,31 +131,15 @@ describe( 'hash', function () {
                     'f904b79cdca12e6f36d5ce6e67c4fe71',
                     'fdc6f4810e3bf14253a020bec3ba9c70'
                 ] );
-                result.should.equal(
-                    '011a059a39784c7f9f7bc6b918a7fd61'
-                );
-
-                done();
-            } );
-        } );
-
-        it( 'generates a unique hash when any file is changed', function ( done ) {
-            var TEST_FILE = path.join( __dirname, 'fixture/main-b.js' );
-            this.hash( TEST_FILE, function ( err, result, reg ) {
-                result.should.equal( 'c4b78742d716762b30780e9428b85631' );
                 done();
             } );
         } );
 
         it( 'allows you to exclude dependencies', function ( done ) {
-
             var TEST_FILE = path.join( __dirname, 'fixture/main-a.js' );
             var EXCLUDES  = [ 'foo' ];
-
             this.hash( TEST_FILE, function ( err, result, reg ) {
-
                 var nreg = normalizeRegistry( reg );
-
                 nreg.paths.should.deep.equal( [
                     'fixture/lib/circle.js',
                     'fixture/lib/oval.js',
@@ -151,6 +147,7 @@ describe( 'hash', function () {
                     'fixture/lib/shape.js',
                     'fixture/lib/square-a.js',
                     'fixture/main-a.js'
+                    // No 'foo' here
                 ] );
                 nreg.hashes.should.deep.equal( [
                     '298f124c79ceff9ca0c4ffba7f14c80f',
@@ -163,22 +160,17 @@ describe( 'hash', function () {
                 result.should.equal(
                     '9557f6935ac6cb47a60cc3a89bbbc336'
                 );
-
                 done();
             }, {
                 exclude: EXCLUDES
             } );
         } );
 
-        it( 'can include arbitrary files', function ( done ) {
-
+        it( 'allows you to include arbitrary files', function ( done ) {
             var TEST_FILE = path.join( __dirname, 'fixture/main-a.js' );
             var INCLUDES  = [ path.join( __dirname, 'fixture/unrelated.txt' ) ];
-
             this.hash( TEST_FILE, function ( err, result, reg ) {
-
                 var nreg = normalizeRegistry( reg );
-
                 nreg.paths.should.deep.equal( [
                     'fixture/lib/circle.js',
                     'fixture/lib/oval.js',
@@ -187,7 +179,7 @@ describe( 'hash', function () {
                     'fixture/lib/square-a.js',
                     'fixture/main-a.js',
                     'fixture/node_modules/foo/index.js',
-                    'fixture/unrelated.txt'
+                    'fixture/unrelated.txt' // Added file
                 ] );
                 nreg.hashes.should.deep.equal( [
                     '0f3f1445aeb4e2c712bbae776d4bb875',
@@ -202,7 +194,6 @@ describe( 'hash', function () {
                 result.should.equal(
                     'c00ba07b0d3101a8a02a24eb68766acf'
                 );
-
                 done();
             }, {
                 include: INCLUDES

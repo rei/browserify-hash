@@ -127,6 +127,14 @@ describe( 'hash', function () {
             } );
         } );
 
+        it( 'generates a unique hash when any file is changed', function ( done ) {
+            var TEST_FILE = path.join( __dirname, 'fixture/main-b.js' );
+            this.hash( TEST_FILE, function ( err, result, reg ) {
+                result.should.equal( 'c4b78742d716762b30780e9428b85631' );
+                done();
+            } );
+        } );
+
         it( 'allows you to exclude dependencies', function ( done ) {
 
             var TEST_FILE = path.join( __dirname, 'fixture/main-a.js' );
@@ -159,6 +167,45 @@ describe( 'hash', function () {
                 done();
             }, {
                 exclude: EXCLUDES
+            } );
+        } );
+
+        it( 'can include arbitrary files', function ( done ) {
+
+            var TEST_FILE = path.join( __dirname, 'fixture/main-a.js' );
+            var INCLUDES  = [ path.join( __dirname, 'fixture/unrelated.txt' ) ];
+
+            this.hash( TEST_FILE, function ( err, result, reg ) {
+
+                var nreg = normalizeRegistry( reg );
+
+                nreg.paths.should.deep.equal( [
+                    'fixture/lib/circle.js',
+                    'fixture/lib/oval.js',
+                    'fixture/lib/rect.js',
+                    'fixture/lib/shape.js',
+                    'fixture/lib/square-a.js',
+                    'fixture/main-a.js',
+                    'fixture/node_modules/foo/index.js',
+                    'fixture/unrelated.txt'
+                ] );
+                nreg.hashes.should.deep.equal( [
+                    '0f3f1445aeb4e2c712bbae776d4bb875',
+                    '298f124c79ceff9ca0c4ffba7f14c80f',
+                    '4ed47e3c525512b28c12250a4b7dfc51',
+                    '5a1f16df82c5491485c255004d550127',
+                    'e72034e8b4859e23df35c1e680377cec',
+                    'e775be988fa4371b0a7d90a1a239d380',
+                    'f904b79cdca12e6f36d5ce6e67c4fe71',
+                    'fdc6f4810e3bf14253a020bec3ba9c70'
+                ] );
+                result.should.equal(
+                    'c00ba07b0d3101a8a02a24eb68766acf'
+                );
+
+                done();
+            }, {
+                include: INCLUDES
             } );
         } );
     } );

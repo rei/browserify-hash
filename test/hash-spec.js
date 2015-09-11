@@ -70,7 +70,7 @@ var getHash = function ( overrides ) {
 describe( 'hash', function () {
 
     // Integration tests to test high-level functionality
-    describe.only( 'integration', function () {
+    describe( 'integration', function () {
 
         // Return a normalized registry structure to ease registry assertions
         var normalizeRegistry = function ( reg ) {
@@ -201,144 +201,146 @@ describe( 'hash', function () {
         } );
     } );
 
-    it( 'asserts the root file path exists and is a regular file', function () {
-        var ERR_MSG = 'fake-file is not a regular file, or does not exist.';
-        getHash( {
-            fs: _.assign( {}, HAPPY_DEPS.fs, {
-                existsSync: function () {
-                    return false;
-                }
-            } )
-        } )( 'fake-file', function ( err ) {
-            err.should.equal( ERR_MSG );
+    describe.skip( 'details', function () {
+        it( 'asserts the root file path exists and is a regular file', function () {
+            var ERR_MSG = 'fake-file is not a regular file, or does not exist.';
+            getHash( {
+                fs: _.assign( {}, HAPPY_DEPS.fs, {
+                    existsSync: function () {
+                        return false;
+                    }
+                } )
+            } )( 'fake-file', function ( err ) {
+                err.should.equal( ERR_MSG );
+            } );
+
+            getHash( {
+                fs: _.assign( {}, HAPPY_DEPS.fs, {
+                    lstatSync: function () {
+                        return {
+                            isFile: function () {
+                                return false;
+                            }
+                        };
+                    }
+                } )
+            } )( 'fake-file', function ( err ) {
+                err.should.equal( ERR_MSG );
+            } );
         } );
 
-        getHash( {
-            fs: _.assign( {}, HAPPY_DEPS.fs, {
-                lstatSync: function () {
-                    return {
-                        isFile: function () {
-                            return false;
-                        }
-                    };
-                }
-            } )
-        } )( 'fake-file', function ( err ) {
-            err.should.equal( ERR_MSG );
+        it( 'defaults undefined options', function () {
+            getHash()( 'fake-file', _.noop );
+            spies.lodash_defaults.should.be.calledOnce;
+            spies.lodash_defaults.args[ 0 ][ 1 ].should.deep.equal( {
+                exclude: [],
+                include: []
+            } );
         } );
-    } );
 
-    it( 'defaults undefined options', function () {
-        getHash()( 'fake-file', _.noop );
-        spies.lodash_defaults.should.be.calledOnce;
-        spies.lodash_defaults.args[ 0 ][ 1 ].should.deep.equal( {
-            exclude: [],
-            include: []
+        it( 'creates a new bsfy instance with the entry file', function () {
+            getHash()( 'fake-file', _.noop );
+            spies.bsfy.should.be.calledOnce;
+            spies.bsfy.should.be.calledWith( 'fake-file' );
         } );
-    } );
 
-    it( 'creates a new bsfy instance with the entry file', function () {
-        getHash()( 'fake-file', _.noop );
-        spies.bsfy.should.be.calledOnce;
-        spies.bsfy.should.be.calledWith( 'fake-file' );
-    } );
-
-    it( 'tells bsfy to ignore excluded files', function () {
-        getHash()( 'fake-file', _.noop, {
-            exclude: [
+        it( 'tells bsfy to ignore excluded files', function () {
+            getHash()( 'fake-file', _.noop, {
+                exclude: [
+                    'fake-dep-a',
+                    'fake-dep-b'
+                ]
+            } );
+            spies.bsfy_external.should.be.calledOnce;
+            spies.bsfy_external.args[ 0 ][ 0 ].should.deep.equal( [
                 'fake-dep-a',
                 'fake-dep-b'
-            ]
+            ] );
         } );
-        spies.bsfy_external.should.be.calledOnce;
-        spies.bsfy_external.args[ 0 ][ 0 ].should.deep.equal( [
-            'fake-dep-a',
-            'fake-dep-b'
-        ] );
-    } );
 
-    it( 'pushes the dep collector onto the `deps` pipeline phase', function () {
-        var thruObjSpy = sinon.spy( function ( cb ) {
-            cb().should.equal( 'dep-collector-return' );
-            return 'thru-return';
-        } );
-        var hash = getHash( {
-            through2: {
-                obj: thruObjSpy
-            }
-        } );
-        var depCollectorStub = sinon.stub( hash, '_depCollector' )
-            .returns( 'dep-collector-return' );
-
-        hash()
-
-        thruObjSpy.should.have.been.calledOnce;
-
-        spies.bsfy_pipeline_get_push.should.have.been.calledOnce;
-        spies.bsfy_pipeline_get_push.should.have.been.calledWith( 'thru-return' );
-
-        spies.bsfy_pipeline_get.should.have.been.calledOnce;
-        spies.bsfy_pipeline_get.should.have.been.calledWith( 'deps' );
-    } );
-
-    it( 'calls the bundle handler', function () {
-        var bundleSpy = sinon.spy( function ( cb ) {
-            cb( null, null ).should.equal( 'bundler-return' );
-            return 'bundler-return';
-        } );
-        var hash = getHash( {
-            browserify: function () {
-                return _.assign( {}, spies.bsfy(), {
-                    bundle: bundleSpy
-                } )
-            }
-        } );
-        var bundlerStub = sinon.stub( hash, '_bundler', function ( opts, cb, err, bundle ) {
-            return 'bundler-return';
-        } )
-
-        hash();
-    } );
-} );
-
-describe( '_depCollector', function () {
-
-    beforeEach( function () {
-        this.pushSpy = sinon.spy();
-        this.nextSpy = sinon.spy();
-        this.hash    = getHash();
-        // Call dep collector with a custom `this` context
-        this.hash._depCollector.bind( { push: this.pushSpy } )(
-            {
-                id:     'fake-dep-id',
-                source: 'fake-dep-source'
-            },
-            null,
-            this.nextSpy
-        );
-    } );
-
-    it( 'hashes every dep source', function () {
-        spies.md5.should.have.been.calledOnce;
-        spies.md5.should.have.been.calledWith( 'fake-dep-source' );
-    } );
-
-    it( 'pushes every hashed dep source onto the hash registry', function () {
-        this.hash.srcHashReg.should.deep.equal( {
-            'fake-dep-id': 'md5-return'
-        } );
-    } );
-
-    it( 'pushes the dep, unchanged, back onto the stream', function () {
-        this.pushSpy.should.have.been.called.once;
-        this.pushSpy.args[ 0 ][ 0 ]
-            .should.deep.equal( {
-                id:     'fake-dep-id',
-                source: 'fake-dep-source'
+        it( 'pushes the dep collector onto the `deps` pipeline phase', function () {
+            var thruObjSpy = sinon.spy( function ( cb ) {
+                cb().should.equal( 'dep-collector-return' );
+                return 'thru-return';
             } );
-    } );
+            var hash = getHash( {
+                through2: {
+                    obj: thruObjSpy
+                }
+            } );
+            var depCollectorStub = sinon.stub( hash, '_depCollector' )
+                .returns( 'dep-collector-return' );
 
-    it( 'calls the `next` callback', function () {
-        this.nextSpy.should.have.been.calledOnce;
+            hash()
+
+            thruObjSpy.should.have.been.calledOnce;
+
+            spies.bsfy_pipeline_get_push.should.have.been.calledOnce;
+            spies.bsfy_pipeline_get_push.should.have.been.calledWith( 'thru-return' );
+
+            spies.bsfy_pipeline_get.should.have.been.calledOnce;
+            spies.bsfy_pipeline_get.should.have.been.calledWith( 'deps' );
+        } );
+
+        it( 'calls the bundle handler', function () {
+            var bundleSpy = sinon.spy( function ( cb ) {
+                cb( null, null ).should.equal( 'bundler-return' );
+                return 'bundler-return';
+            } );
+            var hash = getHash( {
+                browserify: function () {
+                    return _.assign( {}, spies.bsfy(), {
+                        bundle: bundleSpy
+                    } )
+                }
+            } );
+            var bundlerStub = sinon.stub( hash, '_bundler', function ( opts, cb, err, bundle ) {
+                return 'bundler-return';
+            } )
+
+            hash();
+        } );
+
+        describe( '_depCollector', function () {
+
+            beforeEach( function () {
+                this.pushSpy = sinon.spy();
+                this.nextSpy = sinon.spy();
+                this.hash    = getHash();
+                // Call dep collector with a custom `this` context
+                this.hash._depCollector.bind( { push: this.pushSpy } )(
+                    {
+                        id:     'fake-dep-id',
+                        source: 'fake-dep-source'
+                    },
+                    null,
+                    this.nextSpy
+                );
+            } );
+
+            it( 'hashes every dep source', function () {
+                spies.md5.should.have.been.calledOnce;
+                spies.md5.should.have.been.calledWith( 'fake-dep-source' );
+            } );
+
+            it( 'pushes every hashed dep source onto the hash registry', function () {
+                this.hash.srcHashReg.should.deep.equal( {
+                    'fake-dep-id': 'md5-return'
+                } );
+            } );
+
+            it( 'pushes the dep, unchanged, back onto the stream', function () {
+                this.pushSpy.should.have.been.called.once;
+                this.pushSpy.args[ 0 ][ 0 ]
+                    .should.deep.equal( {
+                        id:     'fake-dep-id',
+                        source: 'fake-dep-source'
+                    } );
+            } );
+
+            it( 'calls the `next` callback', function () {
+                this.nextSpy.should.have.been.calledOnce;
+            } );
+        } );
     } );
 } );

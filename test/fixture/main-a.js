@@ -1,3 +1,5 @@
-var _      = require( 'lodash' );
-var square = require( './lib/square-a' );
-var circle = require( './lib/circle' );
+var f = require( 'foo' );
+var s = require( './lib/square-a' );
+var c = require( './lib/circle' );
+
+console.log( 'Hello from', __filename );

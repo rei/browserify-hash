@@ -1,3 +1,3 @@
-var _    = require( 'lodash' );
-var bsfy = require( 'browserify' );
-var md5  = require( 'md5' );
+var f = require( 'foo' );
+
+console.log( 'Hello from', __filename );

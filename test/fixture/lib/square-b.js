@@ -1,3 +1,3 @@
 var r = require( './rect' );
 
-console.log( 'Hello from square b!' );
+console.log( 'Hello from', __filename );

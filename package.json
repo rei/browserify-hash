@@ -1,6 +1,6 @@
 {
   "name": "browserify-hash",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Detect changes to a Browserify bundle's source files",
   "directories": {
     "test": "test",

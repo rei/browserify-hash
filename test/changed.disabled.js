@@ -28,7 +28,7 @@ describe( 'changed', function () {
         fs.removeSync( TMP_DIR );
     } );
 
-    describe( 'true (cache miss)', function () {
+    describe.skip( 'true (cache miss)', function () {
         // Hash file does not exist
         it( 'returns true if the hash file does not exist, and creates it', function ( done ) {
             var HASH_FILE = path.join( TMP_DIR, 'non-existant' );
@@ -73,7 +73,7 @@ describe( 'changed', function () {
     } );
 
     describe( 'false (cache hit)', function () {
-        
+
         // Entry file's hash matches
         it( 'returns false if the entry file\'s hash matches', function ( done ) {
             var HASH_FILE = path.join( TMP_DIR, 'match' );

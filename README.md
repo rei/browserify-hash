@@ -5,10 +5,6 @@
 Browserify-hash detects changes in a Browserify bundle's source files by
 generating and comparing a hash for the entry module and its dependency tree.
 
-## Status
-
-Work in progress. Check back later :)
-
 ## API
 
 Begin by requiring browserify-hash:
@@ -17,7 +13,7 @@ Begin by requiring browserify-hash:
 var bsfyHash = require( 'browserify-hash' );
 ```
 
-### `bsfyHash.changed( entryModule, opts, cb )`
+### `bsfyHash.changed( entryModule, cb, opts )`
 
 ```
 /**
@@ -30,6 +26,7 @@ var bsfyHash = require( 'browserify-hash' );
  *                               the resulting hash
  *
  * @param {Object} opts                    - Options object
+ * @param {Object} [opts.skipMissing=true] - Consider mising files unchanged.
  * @param {String} [hashFile='.bsfy-hash'] - JSON file to store the hashes to
  *                                           detect changes between runs
  * @param {Array}  [opts.exclude=[]]       - Dependencies to exclude from
@@ -39,7 +36,7 @@ var bsfyHash = require( 'browserify-hash' );
  */
 ```
 
-### `bsfyHash.hash( entryModule, opts, cb )`
+### `bsfyHash.hash( entryModule, cb, opts )`
 
 ```
 /**
@@ -51,12 +48,14 @@ var bsfyHash = require( 'browserify-hash' );
  *                               resulting hash, and the raw dependency path ->
  *                               source hash object
  *
- * @param {Object} opts              - Options object
- * @param {Array}  [opts.exclude=[]] - Dependencies to exclude from
- *                                     consideration, e.g., `lodash`, which can
- *                                     degrade performance
- * @param {Array}  [opts.include=[]] - Additional files to include in the dep
- *                                     tree
+ * @param {Object} opts                     - Options object
+ * @param {Object} [opts.bsfy=browserify()] - Provide your own configured
+ *                                        Browserify instance.
+ * @param {Array}  [opts.exclude=[]]      - Dependencies to exclude from
+ *                                        consideration, e.g., `lodash`, which
+ *                                        can degrade performance
+ * @param {Array}  [opts.include=[]]      - Additional files to include in the
+ *                                        dep tree
  */
 ```
 
